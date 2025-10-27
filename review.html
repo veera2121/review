@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Customer Reviews</title>
+
+<style>
+  body { font-family: Arial; background:#eee; display:flex; justify-content:center; padding:20px; }
+  .box { width:100%; max-width:550px; background:white; padding:20px; border-radius:10px; }
+  .star span { cursor:pointer; font-size:30px; color:#ccc; }
+  .star span.active { color:gold; }
+  button { margin-top:10px; padding:10px 16px; background:#0072FF; color:#fff; border:none; border-radius:6px; }
+  ul { list-style:none; padding:0; }
+  li { background:#f8f8f8; padding:12px; border-left:4px solid #0072FF; margin:8px 0; border-radius:6px; }
+</style>
+
+</head>
+<body>
+
+<div class="box">
+<h2>Customer Reviews</h2>
+
+<input id="name" placeholder="Your Name (Optional)"><br><br>
+
+<div class="star" id="starRate">
+  <span data-num="1">★</span>
+  <span data-num="2">★</span>
+  <span data-num="3">★</span>
+  <span data-num="4">★</span>
+  <span data-num="5">★</span>
+</div><br>
+
+<textarea id="review" placeholder="Write review..." rows="4" style="width:100%"></textarea><br>
+
+<button id="btn">Submit Review</button>
+
+<hr>
+<h3>Recent Reviews</h3>
+<ul id="list"></ul>
+
+</div>
+
+<script>
+const API = "https://YOUR_VERCEL_SITE_URL/api/reviews";
+
+let rating = 0;
+const stars = document.querySelectorAll(".star span");
+
+stars.forEach(s => {
+  s.addEventListener("click", () => {
+    rating = Number(s.dataset.num);
+    stars.forEach(st => st.classList.remove("active"));
+    for (let i=0; i<rating; i++) stars[i].classList.add("active");
+  });
+});
+
+document.getElementById("btn").onclick = async () => {
+  const name = document.getElementById("name").value || "Anonymous";
+  const text = document.getElementById("review").value;
+
+  if (!rating || !text.trim()) return alert("Give rating & review");
+
+  const res = await fetch(API, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ name, rating, text })
+  });
+
+  document.getElementById("review").value = "";
+  rating = 0;
+  stars.forEach(st => st.classList.remove("active"));
+  load();
+};
+
+async function load() {
+  const res = await fetch(API);
+  const data = await res.json();
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  data.forEach(r => {
+    const li = document.createElement("li");
+    li.innerHTML = `<b>${r.name}</b> ${r.rating}★<br>${r.text}`;
+    list.appendChild(li);
+  });
+}
+
+load();
+</script>
+
+</body>
+</html>
